@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+      <a href="/security">Security</a>
+      <a href="/transfer">Transfer</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="nav-admin">Admin</a>
+      <% } %>
+      <a href="/challenges" class="nav-challenges">Challenges</a>
+      <a href="/targets">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <p class="text-muted">Manage your finances at a glance</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Account Balance</div>
+        <div class="stat-value">$<%= user.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Account Type</div>
+        <div class="stat-value"><%= user.role === 'admin' ? 'Premium' : 'Standard' %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">2FA Status</div>
+        <div class="stat-value <%= user.twoFactorEnabled ? 'text-success' : 'text-warning' %>"><%= user.twoFactorEnabled ? 'Enabled' : 'Disabled' %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active API Keys</div>
+        <div class="stat-value"><%= user.apiKeys.length %></div>
+      </div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="card">
+        <h3>Account Information</h3>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Username</span>
+            <span class="info-value"><%= user.username %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value"><%= user.email %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Display Name</span>
+            <span class="info-value"><%= user.displayName %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Role</span>
+            <span class="info-value"><%= user.role %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Member Since</span>
+            <span class="info-value"><%= new Date(user.createdAt).toLocaleDateString() %></span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Recent Transfers</h3>
+        <% if (recentTransfers.length === 0) { %>
+          <p class="text-muted">No recent transfers</p>
+        <% } else { %>
+          <div class="transfer-list">
+            <% recentTransfers.forEach(function(t) { %>
+              <div class="transfer-item">
+                <div class="transfer-info">
+                  <span class="transfer-to">To: <%= t.to %></span>
+                  <span class="transfer-date"><%= new Date(t.timestamp).toLocaleString() %></span>
+                </div>
+                <span class="transfer-amount">-$<%= t.amount.toFixed(2) %></span>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+  <% if (typeof flag !== 'undefined' && flag) { %>
+  <!-- FLAG: <%= flag %> -->
+  <% } %>
+</body>
+</html>

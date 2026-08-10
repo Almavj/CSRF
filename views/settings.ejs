@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings" class="active">Settings</a>
+      <a href="/security">Security</a>
+      <a href="/transfer">Transfer</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="nav-admin">Admin</a>
+      <% } %>
+      <a href="/challenges" class="nav-challenges">Challenges</a>
+      <a href="/targets">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="page-header">
+      <h1>Account Settings</h1>
+      <p class="text-muted">Manage your account preferences</p>
+    </div>
+    <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+    <div class="settings-grid">
+      <div class="card">
+        <h3>Update Email Address</h3>
+        <p class="text-muted">Change the email associated with your account</p>
+        <form method="POST" action="/settings/update-email" class="settings-form">
+          <!-- VULN LEVEL 2: Token present but validation is weak -->
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label for="email">New Email</label>
+            <input type="email" id="email" name="email" value="<%= user.email %>" required>
+          </div>
+          <div class="form-group">
+            <label>CSRF Token</label>
+            <input type="text" name="csrf_token_display" value="<%= csrfToken %>" readonly class="token-display">
+            <small class="text-muted">This token protects your request</small>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Email</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Account Details</h3>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Username</span>
+            <span class="info-value"><%= user.username %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Current Email</span>
+            <span class="info-value"><%= user.email %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Account ID</span>
+            <span class="info-value"><%= user.id %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+  <% if (typeof flag !== 'undefined' && flag) { %>
+  <!-- FLAG: <%= flag %> -->
+  <% } %>
+</body>
+</html>

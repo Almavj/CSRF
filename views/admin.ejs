@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-admin">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-badge">ADMIN</span>
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/admin" class="active">Admin</a>
+      <a href="/challenges" class="nav-challenges">Challenges</a>
+      <a href="/targets">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="page-header">
+      <h1>Admin Panel</h1>
+      <p class="text-muted">System administration, user management, and challenge oversight</p>
+    </div>
+    <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <!-- Challenge Progress Overview -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3>Challenge Progress Overview</h3>
+      <p class="text-muted" style="margin-bottom: 1rem;">Track how each user is progressing through the CSRF challenges</p>
+      <div class="admin-progress-table">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Progress</th>
+              <th>Solved</th>
+              <% challenges.forEach(function(ch) { %>
+                <th class="challenge-col"><span class="challenge-col-label" title="<%= ch.name %>">L<%= ch.id %></span></th>
+              <% }); %>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(u) { %>
+              <% const p = allProgress[u.username] || { solved: 0, total: challenges.length, percentage: 0 }; %>
+              <tr>
+                <td>
+                  <strong><%= u.username %></strong>
+                  <span class="badge badge-<%= u.role === 'admin' ? 'premium' : 'standard' %>"><%= u.role %></span>
+                </td>
+                <td>
+                  <div class="mini-progress-bar">
+                    <div class="mini-progress-fill" style="width: <%= p.percentage %>%"></div>
+                  </div>
+                  <span class="mini-progress-text"><%= p.percentage %>%</span>
+                </td>
+                <td><%= p.solved %>/<%= p.total %></td>
+                <% challenges.forEach(function(ch) { %>
+                  <td>
+                    <% const userProgress = allProgress[u.username]; %>
+                    <% if (userProgress && userProgress[ch.id] && userProgress[ch.id].solved) { %>
+                      <span class="flag-check">&#x2714;</span>
+                    <% } else { %>
+                      <span class="flag-cross">&#x2718;</span>
+                    <% } %>
+                  </td>
+                <% }); %>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- User Management -->
+      <div class="card">
+        <h3>User Management</h3>
+        <div class="user-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% users.forEach(function(u) { %>
+              <tr>
+                <td><%= u.username %></td>
+                <td><%= u.email %></td>
+                <td>
+                  <span class="badge badge-<%= u.role === 'admin' ? 'premium' : 'standard' %>"><%= u.role %></span>
+                </td>
+                <td>$<%= u.balance.toLocaleString('en-US', {minimumFractionDigits: 2}) %></td>
+                <td class="actions">
+                    <% if (u.username !== 'admin') { %>
+                      <form method="POST" action="/admin/promote" style="display:inline">
+                        <input type="hidden" name="targetUser" value="<%= u.username %>">
+                        <input type="hidden" name="newRole" value="admin">
+                        <button type="submit" class="btn btn-sm btn-secondary">Promote</button>
+                      </form>
+                      <form method="POST" action="/admin/delete-user" style="display:inline">
+                        <input type="hidden" name="targetUser" value="<%= u.username %>">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete user?')">Delete</button>
+                      </form>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Audit Log -->
+      <div class="card">
+        <h3>Audit Log <span class="text-muted">(last 50 entries)</span></h3>
+        <div class="audit-log">
+          <% auditLog.forEach(function(entry) { %>
+            <div class="log-entry">
+              <span class="log-time"><%= new Date(entry.timestamp).toLocaleTimeString() %></span>
+              <span class="log-method"><%= entry.method %></span>
+              <span class="log-path"><%= entry.path %></span>
+              <span class="log-origin"><%= entry.origin %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+  <% if (typeof flag !== 'undefined' && flag) { %>
+  <!-- FLAG: <%= flag %> -->
+  <% } %>
+</body>
+</html>

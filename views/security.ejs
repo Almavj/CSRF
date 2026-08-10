@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+      <a href="/security" class="active">Security</a>
+      <a href="/transfer">Transfer</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="nav-admin">Admin</a>
+      <% } %>
+      <a href="/challenges" class="nav-challenges">Challenges</a>
+      <a href="/targets">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="page-header">
+      <h1>Security Settings</h1>
+      <p class="text-muted">Manage your password and security preferences</p>
+    </div>
+    <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+    <div class="settings-grid">
+      <div class="card">
+        <h3>Change Password</h3>
+        <p class="text-muted">Update your account password</p>
+        <form method="POST" action="/security/change-password" class="settings-form">
+          <!-- VULN LEVEL 3: Double-submit cookie - sameSite=none, httpOnly=false -->
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" name="currentPassword" required>
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" name="newPassword" required minlength="8">
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8">
+          </div>
+          <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Two-Factor Authentication</h3>
+        <p class="text-muted">Add an extra layer of security to your account</p>
+        <div class="security-status">
+          <div class="status-item">
+            <span class="status-label">2FA Status:</span>
+            <span class="status-value <%= user.twoFactorEnabled ? 'text-success' : 'text-warning' %>">
+              <%= user.twoFactorEnabled ? 'Enabled' : 'Disabled' %>
+            </span>
+          </div>
+          <% if (user.twoFactorEnabled) { %>
+            <a href="/api/2fa/disable" class="btn btn-danger">Disable 2FA</a>
+          <% } else { %>
+            <a href="/api/2fa/enable" class="btn btn-secondary">Enable 2FA</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+  <% if (typeof flag !== 'undefined' && flag) { %>
+  <!-- FLAG: <%= flag %> -->
+  <% } %>
+</body>
+</html>

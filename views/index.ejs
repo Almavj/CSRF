@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/">CSRF</a>
+    </div>
+    <div class="nav-links">
+      <% if (user) { %>
+        <span class="nav-user">Welcome, <%= user.displayName %></span>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/profile">Profile</a>
+        <a href="/settings">Settings</a>
+        <a href="/security">Security</a>
+        <a href="/transfer">Transfer</a>
+        <% if (user.role === 'admin') { %>
+          <a href="/admin" class="nav-admin">Admin</a>
+        <% } %>
+        <a href="/challenges" class="nav-challenges">Challenges</a>
+        <a href="/targets">Targets</a>
+        <a href="/logout" class="nav-logout">Logout</a>
+      <% } else { %>
+        <a href="/login">Login</a>
+      <% } %>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="hero">
+      <div class="hero-badge">Secure Banking Platform</div>
+      <h1>Welcome to <span class="text-gradient">CSRF</span></h1>
+      <p class="hero-subtitle">A next-generation digital banking experience built with cutting-edge security.</p>
+      <div class="hero-features">
+        <div class="feature-card">
+          <div class="feature-icon">&#x1f512;</div>
+          <h3>Bank-Grade Security</h3>
+          <p>Enterprise-level protection for all your transactions</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#x26a1;</div>
+          <h3>Instant Transfers</h3>
+          <p>Send money anywhere in the world, instantly</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#x1f4ca;</div>
+          <h3>Real-time Analytics</h3>
+          <p>Track your finances with powerful dashboards</p>
+        </div>
+      </div>
+      <% if (!user) { %>
+        <a href="/login" class="btn btn-primary btn-lg">Get Started</a>
+      <% } else { %>
+        <a href="/dashboard" class="btn btn-primary btn-lg">Go to Dashboard</a>
+      <% } %>
+    </div>
+    <section class="info-section">
+      <h2>Why CSRF?</h2>
+      <p>Cross-Site Request Forgery is one of the most common web application vulnerabilities. CSRF attacks force an authenticated user to execute unwanted actions on a web application in which they're currently authenticated.</p>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>The Threat</h4>
+          <p>Attackers can trick users into performing actions they didn't intend - changing email addresses, transferring funds, or modifying account settings.</p>
+        </div>
+        <div class="info-card">
+          <h4>The Defense</h4>
+          <p>Proper CSRF tokens, SameSite cookies, and validation of request origins are critical defenses against these attacks.</p>
+        </div>
+        <div class="info-card">
+          <h4>Learn by Doing</h4>
+          <p>This platform contains intentionally vulnerable endpoints. Find them, exploit them, and learn how to prevent them.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+</body>
+</html>

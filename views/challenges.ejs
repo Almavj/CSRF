@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+      <a href="/security">Security</a>
+      <a href="/transfer">Transfer</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="nav-admin">Admin</a>
+      <% } %>
+      <a href="/challenges" class="active">Challenges</a>
+      <a href="/targets">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="page-header">
+      <h1>CSRF Challenges</h1>
+      <p class="text-muted">Test your CSRF exploitation skills</p>
+    </div>
+    <div class="challenges-grid">
+      <% challenges.forEach(function(ch) { %>
+        <% const isSolved = progress[ch.id] && progress[ch.id].solved; %>
+        <div class="challenge-card <%= isSolved ? 'challenge-solved' : '' %>">
+          <div class="challenge-header-row">
+            <div class="challenge-difficulty <%= ch.difficulty %>"><%= ch.difficulty %></div>
+            <% if (isSolved) { %>
+              <span class="challenge-solved-badge">&#x2714; SOLVED</span>
+            <% } %>
+          </div>
+          <h3>Level <%= ch.id %>: <%= ch.name %></h3>
+          <p><%= ch.description %></p>
+          <div class="challenge-target">Target: <code><%= ch.endpoint %></code></div>
+          <div class="challenge-hint">Hint: <%= ch.hint %></div>
+          <% if (!isSolved) { %>
+            <a href="/targets" class="btn btn-primary btn-sm" style="margin-top: 0.8rem;">Attack This Target</a>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+    <div class="card" style="margin-top: 2rem;">
+      <h3>Rules of Engagement</h3>
+      <ul class="rules-list">
+        <li>You can use any CSRF attack vector: forms, images, scripts, XHR, etc.</li>
+        <li>Your attacks should work from a completely external HTML page.</li>
+        <li>The victim is always logged in when the attack executes.</li>
+        <li>Each level builds on concepts from previous levels.</li>
+        <li>The final challenge requires chaining multiple CSRF vulnerabilities together.</li>
+        <li>Go to <a href="/targets" style="color: var(--accent);">Targets</a> to submit flags and track your progress.</li>
+      </ul>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+</body>
+</html>

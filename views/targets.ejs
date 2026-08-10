@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand"><a href="/">CSRF</a></div>
+    <div class="nav-links">
+      <span class="nav-user">Welcome, <%= user.displayName %></span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+      <a href="/settings">Settings</a>
+      <a href="/security">Security</a>
+      <a href="/transfer">Transfer</a>
+      <% if (user.role === 'admin') { %>
+        <a href="/admin" class="nav-admin">Admin</a>
+      <% } %>
+      <a href="/challenges" class="nav-challenges">Challenges</a>
+      <a href="/targets" class="active">Targets</a>
+      <a href="/logout" class="nav-logout">Logout</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="page-header">
+      <h1>Learning Targets</h1>
+      <p class="text-muted">Your roadmap to mastering CSRF exploitation and defense</p>
+    </div>
+
+    <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <!-- Progress Overview -->
+    <div class="progress-overview">
+      <div class="progress-stats">
+        <div class="progress-stat">
+          <span class="progress-stat-value" id="solvedCount">0</span>
+          <span class="progress-stat-label">Challenges Solved</span>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-stat-value" id="totalCount"><%= challenges.length %></span>
+          <span class="progress-stat-label">Total Challenges</span>
+        </div>
+        <div class="progress-stat">
+          <span class="progress-stat-value" id="percentageValue">0%</span>
+          <span class="progress-stat-label">Completion</span>
+        </div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Challenge Targets -->
+    <div class="targets-grid">
+      <% challenges.forEach(function(ch) { %>
+        <% const isSolved = progress[ch.id] && progress[ch.id].solved; %>
+        <div class="target-card <%= isSolved ? 'target-solved' : '' %>">
+          <div class="target-header">
+            <div class="target-number"><%= ch.id %></div>
+            <div class="challenge-difficulty <%= ch.difficulty %>"><%= ch.difficulty %></div>
+            <% if (isSolved) { %>
+              <span class="target-badge-solved">SOLVED</span>
+            <% } %>
+          </div>
+          <h3><%= ch.name %></h3>
+          <p class="target-description"><%= ch.description %></p>
+
+          <div class="target-meta">
+            <div class="target-endpoint">
+              <span class="target-meta-label">Target:</span>
+              <code><%= ch.endpoint %></code>
+            </div>
+            <div class="target-lesson">
+              <span class="target-meta-label">You'll learn:</span>
+              <span><%= ch.lesson %></span>
+            </div>
+          </div>
+
+          <% if (isSolved) { %>
+            <div class="target-flag-captured">
+              <span class="flag-icon">&#x1f3c6;</span> Flag captured: <code class="flag-code"><%= ch.flag %></code>
+              <span class="flag-time">Solved <%= new Date(progress[ch.id].solvedAt).toLocaleString() %></span>
+            </div>
+          <% } else { %>
+            <div class="target-submit">
+              <form class="flag-form" data-challenge-id="<%= ch.id %>">
+                <input type="text" class="flag-input" name="flag" placeholder="FLAG{...}" required>
+                <button type="submit" class="btn btn-primary btn-sm">Submit Flag</button>
+              </form>
+              <div class="flag-result hidden" id="result-<%= ch.id %>"></div>
+              <div class="target-hint">
+                <button class="hint-toggle" onclick="this.nextElementSibling.classList.toggle('hidden'); this.textContent = this.textContent === 'Show Hint' ? 'Hide Hint' : 'Show Hint'">Show Hint</button>
+                <div class="hint-content hidden"><%= ch.hint %></div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+      <h3>How to Use This Page</h3>
+      <ul class="rules-list">
+        <li>Work through each challenge from top to bottom (they build on each other).</li>
+        <li>Read the <strong>You'll learn</strong> section to understand the goal before attacking.</li>
+        <li>Write your own exploit code to trigger the CSRF vulnerability.</li>
+        <li>When you find the flag, paste it into the submit box to mark the challenge complete.</li>
+        <li>The final challenge requires chaining multiple vulnerabilities together.</li>
+        <li>Check your progress below - a full bar means you've mastered CSRF!</li>
+      </ul>
+    </div>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 CSRF Bank. Educational Platform for Security Researchers.</p>
+  </footer>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Calculate initial progress
+    let solved = 0;
+    const total = <%= challenges.length %>;
+    <% challenges.forEach(function(ch) { %>
+      <% if (progress[ch.id] && progress[ch.id].solved) { %> solved++; <% } %>
+    <% }); %>
+    updateProgress(solved, total);
+
+    // Handle flag submissions
+    document.querySelectorAll('.flag-form').forEach(function(form) {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const challengeId = this.dataset.challengeId;
+        const flagInput = this.querySelector('.flag-input');
+        const resultDiv = document.getElementById('result-' + challengeId);
+        const card = this.closest('.target-card');
+
+        try {
+          const res = await fetch('/api/submit-flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ challengeId: parseInt(challengeId), flag: flagInput.value })
+          });
+          const data = await res.json();
+          resultDiv.className = data.success ? 'flag-result flag-success' : 'flag-result flag-error';
+          resultDiv.textContent = data.success ? data.message : data.error;
+          resultDiv.classList.remove('hidden');
+
+          if (data.success && !data.alreadySolved) {
+            solved++;
+            updateProgress(solved, total);
+            setTimeout(function() { location.reload(); }, 1500);
+          }
+        } catch(err) {
+          resultDiv.className = 'flag-result flag-error';
+          resultDiv.textContent = 'Submission failed: ' + err.message;
+          resultDiv.classList.remove('hidden');
+        }
+      });
+    });
+
+    function updateProgress(solved, total) {
+      document.getElementById('solvedCount').textContent = solved;
+      document.getElementById('totalCount').textContent = total;
+      const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+      document.getElementById('percentageValue').textContent = pct + '%';
+      document.getElementById('progressBar').style.width = pct + '%';
+    }
+  });
+  </script>
+</body>
+</html>
